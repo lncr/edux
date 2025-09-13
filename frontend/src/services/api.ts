@@ -1,7 +1,7 @@
 import axios, { AxiosResponse } from 'axios';
 import { AuthTokens, LoginCredentials, RegisterData, User, University, Application } from '../types';
 
-const API_BASE_URL = 'http://localhost:5000/api/v1';
+const API_BASE_URL = 'http://localhost:8000/api/v1';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
