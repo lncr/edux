@@ -119,12 +119,16 @@ export const applicationsAPI = {
   },
 
   create: async (data: Omit<Application, 'id' | 'created_at' | 'updated_at' | 'university_name'>): Promise<Application> => {
-    const response = await apiClient.post('/applications/', data);
+    const response = await apiClient.post('/applications/', data, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
     return response.data;
   },
 
   update: async (id: number, data: Partial<Application>): Promise<Application> => {
-    const response = await apiClient.put(`/applications/${id}/`, data);
+    const response = await apiClient.post('/applications/', data, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
     return response.data;
   },
 

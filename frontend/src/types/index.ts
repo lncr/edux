@@ -21,19 +21,16 @@ export interface University {
   website?: string;
   created_at: string;
   updated_at: string;
+  thumbnail: string;
 }
 
 export interface Application {
   id: number;
   user: number;
   university: number;
-  university_name?: string;
-  status: 'pending' | 'accepted' | 'rejected' | 'submitted';
-  application_date: string;
-  notes?: string;
-  documents?: string;
-  created_at: string;
-  updated_at: string;
+  cover_letter?: string;
+  prior_highest_education: "NO EDUCATION" | "HIGH SCHOOL" | "BACHELORS" | "MASTERS" | "PHD";
+  certificate?: string | null;
 }
 
 // Auth Types

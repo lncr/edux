@@ -76,6 +76,19 @@ const Universities: React.FC = () => {
                   Ranking: #{university.ranking}
                 </p>
               )}
+              {university.thumbnail && (
+                <img
+                  src={university.thumbnail}
+                  alt={`${name} thumbnail`}
+                  style={{
+                    width: "200px",
+                    height: "150px",
+                    objectFit: "cover",
+                    borderRadius: "8px",
+                    border: "1px solid #ddd",
+                  }}
+                />)
+                }
               {university.website && (
                 <p>
                   <a 

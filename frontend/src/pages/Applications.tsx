@@ -12,9 +12,9 @@ const Applications: React.FC = () => {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     university: '',
-    status: 'pending' as Application['status'],
-    notes: '',
-    documents: ''
+    cover_letter: '',
+    prior_highest_education: 'NO EDUCATION' as Application['prior_highest_education'],
+    certificate: ''
   });
   const { user } = useAuth();
 
@@ -38,41 +38,40 @@ const Applications: React.FC = () => {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
+  e.preventDefault();
+  if (!user) return;
 
-    if (!user) return;
+  try {
+    const formPayload = new FormData();
+    formPayload.append('user', user.id.toString());
+    formPayload.append('university', formData.university);
+    formPayload.append('cover_letter', formData.cover_letter);
+    formPayload.append('prior_highest_education', formData.prior_highest_education);
 
-    try {
-      const applicationData = {
-        user: user.id,
-        university: parseInt(formData.university),
-        status: formData.status,
-        application_date: new Date().toISOString(),
-        notes: formData.notes || undefined,
-        documents: formData.documents || undefined,
-      };
-
-      if (editingId) {
-        await applicationsAPI.update(editingId, applicationData);
-      } else {
-        await applicationsAPI.create(applicationData);
-      }
-
-      resetForm();
-      fetchData();
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to save application');
+    if (formData.certificate instanceof File) {
+      formPayload.append('certificate', formData.certificate);
     }
-  };
+
+    if (editingId) {
+      await applicationsAPI.update(editingId, formPayload, true); // pass flag to handle multipart
+    } else {
+      await applicationsAPI.create(formPayload, true);
+    }
+
+    resetForm();
+    fetchData();
+  } catch (err: any) {
+    setError(err.response?.data?.detail || 'Failed to save application');
+  }
+};
 
   const handleEdit = (application: Application) => {
     setEditingId(application.id);
     setFormData({
       university: application.university.toString(),
-      status: application.status,
-      notes: application.notes || '',
-      documents: application.documents || ''
+      cover_letter: application.cover_letter || '',
+      prior_highest_education: application.prior_highest_education,
+      certificate: application.certificate || ''
     });
     setIsCreating(true);
   };
@@ -91,9 +90,9 @@ const Applications: React.FC = () => {
   const resetForm = () => {
     setFormData({
       university: '',
-      status: 'pending',
-      notes: '',
-      documents: ''
+      cover_letter: '',
+      prior_highest_education: 'NO EDUCATION',
+      certificate: ''
     });
     setIsCreating(false);
     setEditingId(null);
@@ -111,47 +110,6 @@ const Applications: React.FC = () => {
     return university?.name || 'Unknown University';
   };
 
-  const getStatusColor = (status: Application['status']) => {
-    switch (status) {
-      case 'accepted': return '#27ae60';
-      case 'rejected': return '#e74c3c';
-      case 'submitted': return '#3498db';
-      default: return '#f39c12';
-    }
-  };
-
-  const formStyle = {
-    border: '1px solid #ddd',
-    borderRadius: '8px',
-    padding: '1.5rem',
-    marginBottom: '2rem',
-    backgroundColor: '#f8f9fa',
-  };
-
-  const inputStyle = {
-    width: '100%',
-    padding: '0.5rem',
-    marginBottom: '1rem',
-    border: '1px solid #ddd',
-    borderRadius: '4px',
-  };
-
-  const buttonStyle = {
-    padding: '0.5rem 1rem',
-    marginRight: '0.5rem',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-  };
-
-  const cardStyle = {
-    border: '1px solid #ddd',
-    borderRadius: '8px',
-    padding: '1.5rem',
-    marginBottom: '1rem',
-    backgroundColor: '#fff',
-  };
-
   if (loading) return <div style={{ padding: '2rem', textAlign: 'center' }}>Loading applications...</div>;
 
   return (
@@ -160,139 +118,67 @@ const Applications: React.FC = () => {
         <h1>My Applications</h1>
         <button
           onClick={() => setIsCreating(!isCreating)}
-          style={{ ...buttonStyle, backgroundColor: '#27ae60', color: 'white' }}
+          style={{ padding: '0.5rem 1rem', borderRadius: '4px', border: 'none', backgroundColor: '#27ae60', color: 'white' }}
         >
           {isCreating ? 'Cancel' : 'New Application'}
         </button>
       </div>
 
-      {error && (
-        <div style={{ color: 'red', marginBottom: '1rem', textAlign: 'center' }}>
-          {error}
-        </div>
-      )}
+      {error && <div style={{ color: 'red', marginBottom: '1rem', textAlign: 'center' }}>{error}</div>}
 
       {isCreating && (
-        <form onSubmit={handleSubmit} style={formStyle}>
+        <form onSubmit={handleSubmit} style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '1.5rem', marginBottom: '2rem', backgroundColor: '#f8f9fa' }}>
           <h3>{editingId ? 'Edit Application' : 'New Application'}</h3>
-          
-          <label style={{ display: 'block', marginBottom: '0.5rem' }}>University:</label>
-          <select
-            name="university"
-            value={formData.university}
-            onChange={handleChange}
-            required
-            style={inputStyle}
-          >
+
+          <label>University:</label>
+          <select name="university" value={formData.university} onChange={handleChange} required style={{ width: '100%', padding: '0.5rem', marginBottom: '1rem' }}>
             <option value="">Select a university</option>
-            {universities.map((university) => (
-              <option key={university.id} value={university.id}>
-                {university.name} - {university.location}
-              </option>
-            ))}
+            {universities.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
           </select>
-          
-          <label style={{ display: 'block', marginBottom: '0.5rem' }}>Status:</label>
-          <select
-            name="status"
-            value={formData.status}
-            onChange={handleChange}
-            style={inputStyle}
-          >
-            <option value="pending">Pending</option>
-            <option value="submitted">Submitted</option>
-            <option value="accepted">Accepted</option>
-            <option value="rejected">Rejected</option>
+
+          <label>Highest Education:</label>
+          <select name="prior_highest_education" value={formData.prior_highest_education} onChange={handleChange} style={{ width: '100%', padding: '0.5rem', marginBottom: '1rem' }}>
+            <option value="NO EDUCATION">No Education</option>
+            <option value="HIGH SCHOOL">High School</option>
+            <option value="BACHELORS">Bachelors</option>
+            <option value="MASTERS">Masters</option>
+            <option value="PHD">PhD</option>
           </select>
-          
-          <label style={{ display: 'block', marginBottom: '0.5rem' }}>Notes:</label>
-          <textarea
-            name="notes"
-            placeholder="Application notes..."
-            value={formData.notes}
-            onChange={handleChange}
-            rows={3}
-            style={inputStyle}
-          />
-          
-          <label style={{ display: 'block', marginBottom: '0.5rem' }}>Documents:</label>
-          <input
-            type="text"
-            name="documents"
-            placeholder="Document links or references"
-            value={formData.documents}
-            onChange={handleChange}
-            style={inputStyle}
-          />
-          
-          <div>
-            <button
-              type="submit"
-              style={{ ...buttonStyle, backgroundColor: '#3498db', color: 'white' }}
-            >
-              {editingId ? 'Update' : 'Create'} Application
-            </button>
-            <button
-              type="button"
-              onClick={resetForm}
-              style={{ ...buttonStyle, backgroundColor: '#95a5a6', color: 'white' }}
-            >
-              Cancel
-            </button>
-          </div>
+
+          <label>Cover Letter:</label>
+          <textarea name="cover_letter" value={formData.cover_letter} onChange={handleChange} rows={3} style={{ width: '100%', padding: '0.5rem', marginBottom: '1rem' }} />
+
+          <label>Certificate:</label>
+            <input
+              type="file"
+              name="certificate"
+              onChange={(e) => {
+                if (e.target.files && e.target.files[0]) {
+                  setFormData({
+                    ...formData,
+                    certificate: e.target.files[0], // store the File object
+                  });
+                }
+              }}
+              style={{ width: '100%', padding: '0.5rem', marginBottom: '1rem' }}
+            />
+          <button type="submit" style={{ padding: '0.5rem 1rem', marginRight: '0.5rem', backgroundColor: '#3498db', color: 'white', border: 'none', borderRadius: '4px' }}>
+            {editingId ? 'Update' : 'Create'}
+          </button>
+          <button type="button" onClick={resetForm} style={{ padding: '0.5rem 1rem', backgroundColor: '#95a5a6', color: 'white', border: 'none', borderRadius: '4px' }}>Cancel</button>
         </form>
       )}
 
       <div>
         {applications.length === 0 ? (
-          <div style={{ textAlign: 'center', color: '#666' }}>
-            No applications yet. Create your first application!
-          </div>
+          <div style={{ textAlign: 'center', color: '#666' }}>No applications yet.</div>
         ) : (
-          applications.map((application) => (
-            <div key={application.id} style={cardStyle}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                <div style={{ flex: 1 }}>
-                  <h3 style={{ color: '#2c3e50', marginBottom: '0.5rem' }}>
-                    {getUniversityName(application.university)}
-                  </h3>
-                  <p style={{ 
-                    color: getStatusColor(application.status), 
-                    fontWeight: 'bold',
-                    marginBottom: '0.5rem',
-                    textTransform: 'capitalize'
-                  }}>
-                    Status: {application.status}
-                  </p>
-                  <p style={{ color: '#7f8c8d', marginBottom: '0.5rem' }}>
-                    Applied: {new Date(application.application_date).toLocaleDateString()}
-                  </p>
-                  {application.notes && (
-                    <p style={{ marginBottom: '0.5rem' }}>
-                      <strong>Notes:</strong> {application.notes}
-                    </p>
-                  )}
-                  {application.documents && (
-                    <p style={{ marginBottom: '0.5rem' }}>
-                      <strong>Documents:</strong> {application.documents}
-                    </p>
-                  )}
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <button
-                    onClick={() => handleEdit(application)}
-                    style={{ ...buttonStyle, backgroundColor: '#f39c12', color: 'white' }}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(application.id)}
-                    style={{ ...buttonStyle, backgroundColor: '#e74c3c', color: 'white' }}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
+          applications.map(app => (
+            <div key={app.id} style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '1.5rem', marginBottom: '1rem', backgroundColor: '#fff' }}>
+              <h3>{getUniversityName(app.university)}</h3>
+              <p><strong>Highest Education:</strong> {app.prior_highest_education}</p>
+              {app.cover_letter && <p><strong>Cover Letter:</strong> {app.cover_letter}</p>}
+              {app.certificate && <p><strong>Certificate:</strong> {app.certificate}</p>}
             </div>
           ))
         )}
