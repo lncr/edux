@@ -81,9 +81,31 @@ WSGI_APPLICATION = 'edux.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    "default": env.db(),
-}
+# Database configuration with fallback to SQLite
+import os
+database_url = os.environ.get('DATABASE_URL', '')
+
+if database_url.startswith('postgres://') and 'localhost' in database_url:
+    # If PostgreSQL URL points to localhost, use SQLite for development
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+else:
+    try:
+        DATABASES = {
+            "default": env.db(),
+        }
+    except Exception:
+        # Final fallback to SQLite
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
+            }
+        }
 
 AUTH_USER_MODEL = "accounts.CustomUser"
 
