@@ -1,7 +1,7 @@
 import axios, { AxiosResponse } from 'axios';
 import { AuthTokens, LoginCredentials, RegisterData, User, University, Application } from '../types';
 
-const API_BASE_URL = 'http://localhost:8000/api/v1';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -58,7 +58,7 @@ apiClient.interceptors.response.use(
 
 // Auth API
 export const authAPI = {
-  login: async (credentials: LoginCredentials): Promise<{ tokens: AuthTokens; user: User }> => {
+  login: async (credentials: LoginCredentials): Promise<AuthTokens> => {
     const response = await apiClient.post('/token/', credentials);
     return response.data;
   },

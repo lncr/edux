@@ -12,9 +12,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const response = await authAPI.login(credentials);
       
-      localStorage.setItem('access_token', response.tokens.access);
-      localStorage.setItem('refresh_token', response.tokens.refresh);
-      setUser(response.user);
+      // Store tokens
+      localStorage.setItem('access_token', response.access);
+      localStorage.setItem('refresh_token', response.refresh);
+      
+      // Fetch user data separately
+      const userData = await authAPI.getCurrentUser();
+      setUser(userData);
     } catch (error: any) {
       throw new Error(error.response?.data?.detail || 'Login failed');
     }
