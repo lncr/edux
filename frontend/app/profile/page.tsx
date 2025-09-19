@@ -1,0 +1,281 @@
+"use client"
+
+import type React from "react"
+
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Header } from "@/components/header"
+import { Footer } from "@/components/footer"
+import { getCurrentUser, updateUser } from "@/lib/data/user"
+import { getApplicationsByUser } from "@/lib/data/applications"
+import { Edit3, Save, X, Calendar, FileText, GraduationCap } from "lucide-react"
+
+export default function ProfilePage() {
+  const user = getCurrentUser()
+  const applications = getApplicationsByUser()
+
+  const [isEditing, setIsEditing] = useState(false)
+  const [formData, setFormData] = useState({
+    firstName: user.firstName,
+    lastName: user.lastName,
+    email: user.email,
+    bio: user.bio,
+  })
+  const [isLoading, setIsLoading] = useState(false)
+
+  const handleSave = async () => {
+    setIsLoading(true)
+
+    // TODO: Implement actual user update logic
+    console.log("Updating user:", formData)
+
+    // Simulate API call
+    setTimeout(() => {
+      updateUser(formData)
+      setIsLoading(false)
+      setIsEditing(false)
+    }, 1000)
+  }
+
+  const handleCancel = () => {
+    setFormData({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      bio: user.bio,
+    })
+    setIsEditing(false)
+  }
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }))
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Header />
+
+      <main className="flex-1 py-8">
+        <div className="container mx-auto px-4 max-w-4xl">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-3xl md:text-4xl font-bold mb-4">
+              My <span className="text-primary">Profile</span>
+            </h1>
+            <p className="text-xl text-muted-foreground">Manage your account information and preferences.</p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Main Profile Card */}
+            <div className="lg:col-span-2">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle>Profile Information</CardTitle>
+                    {!isEditing ? (
+                      <Button onClick={() => setIsEditing(true)} variant="outline" size="sm">
+                        <Edit3 className="h-4 w-4 mr-2" />
+                        Edit Profile
+                      </Button>
+                    ) : (
+                      <div className="flex gap-2">
+                        <Button onClick={handleSave} size="sm" disabled={isLoading}>
+                          <Save className="h-4 w-4 mr-2" />
+                          {isLoading ? "Saving..." : "Save"}
+                        </Button>
+                        <Button onClick={handleCancel} variant="outline" size="sm">
+                          <X className="h-4 w-4 mr-2" />
+                          Cancel
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </CardHeader>
+
+                <CardContent className="space-y-6">
+                  {/* Avatar Section */}
+                  <div className="flex items-center gap-6">
+                    <Avatar className="h-24 w-24">
+                      <AvatarImage src={user.avatar || "/placeholder.svg"} alt={`${user.firstName} ${user.lastName}`} />
+                      <AvatarFallback className="text-lg">
+                        {user.firstName[0]}
+                        {user.lastName[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    {isEditing && (
+                      <div>
+                        <Button variant="outline" size="sm">
+                          Change Avatar
+                        </Button>
+                        <p className="text-xs text-muted-foreground mt-1">JPG, PNG or GIF. Max size 2MB.</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Form Fields */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="firstName">First Name</Label>
+                      {isEditing ? (
+                        <Input id="firstName" name="firstName" value={formData.firstName} onChange={handleChange} />
+                      ) : (
+                        <p className="py-2 px-3 bg-muted/50 rounded-md">{user.firstName}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="lastName">Last Name</Label>
+                      {isEditing ? (
+                        <Input id="lastName" name="lastName" value={formData.lastName} onChange={handleChange} />
+                      ) : (
+                        <p className="py-2 px-3 bg-muted/50 rounded-md">{user.lastName}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    {isEditing ? (
+                      <Input id="email" name="email" type="email" value={formData.email} onChange={handleChange} />
+                    ) : (
+                      <p className="py-2 px-3 bg-muted/50 rounded-md">{user.email}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="bio">Bio</Label>
+                    {isEditing ? (
+                      <Textarea
+                        id="bio"
+                        name="bio"
+                        value={formData.bio}
+                        onChange={handleChange}
+                        className="min-h-24"
+                        placeholder="Tell us about yourself..."
+                      />
+                    ) : (
+                      <p className="py-2 px-3 bg-muted/50 rounded-md min-h-24 whitespace-pre-wrap">
+                        {user.bio || "No bio provided."}
+                      </p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Sidebar */}
+            <div className="space-y-6">
+              {/* Account Stats */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Account Overview</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">Member since</span>
+                    </div>
+                    <span className="text-sm font-medium">{formatDate(user.joinedDate)}</span>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">Applications</span>
+                    </div>
+                    <span className="text-sm font-medium">{applications.length}</span>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <GraduationCap className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">Universities</span>
+                    </div>
+                    <span className="text-sm font-medium">
+                      {new Set(applications.map((app) => app.universityId)).size}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Recent Applications */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recent Applications</CardTitle>
+                  <CardDescription>Your latest university applications</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {applications.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">No applications yet</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {applications.slice(0, 3).map((application) => (
+                        <div
+                          key={application.id}
+                          className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
+                        >
+                          <div>
+                            <p className="text-sm font-medium">{application.universityName}</p>
+                            <p className="text-xs text-muted-foreground">{application.targetProgram}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-xs text-muted-foreground">{application.status}</p>
+                          </div>
+                        </div>
+                      ))}
+                      {applications.length > 3 && (
+                        <Button variant="ghost" size="sm" className="w-full" asChild>
+                          <a href="/my-applications">View All Applications</a>
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Account Settings */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Account Settings</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <Button variant="outline" size="sm" className="w-full justify-start bg-transparent">
+                    Change Password
+                  </Button>
+                  <Button variant="outline" size="sm" className="w-full justify-start bg-transparent">
+                    Privacy Settings
+                  </Button>
+                  <Button variant="outline" size="sm" className="w-full justify-start bg-transparent">
+                    Notification Preferences
+                  </Button>
+                  <Button variant="destructive" size="sm" className="w-full justify-start">
+                    Delete Account
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <Footer />
+    </div>
+  )
+}
