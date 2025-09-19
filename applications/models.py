@@ -19,5 +19,5 @@ class Application(models.Model):
                                    on_delete=models.CASCADE,
                                    related_name='applications')
     essay = models.TextField(blank=True, default='')
-    education_document = models.ImageField(upload_to="education_document/", blank=True, null=True)
+    education_document = models.URLField(blank=True, null=True)  # Temporarily using URLField instead of ImageField
     recommendation_letter = models.FileField(upload_to="recommendation_letter/", blank=True, null=True)
