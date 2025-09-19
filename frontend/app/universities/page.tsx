@@ -6,15 +6,39 @@ import { Button } from "@/components/ui/button"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { UniversityCard } from "@/components/university-card"
-import { universities, searchUniversities } from "@/lib/data/universities"
+import { getUniversities, searchUniversities, University } from "@/lib/data/universities"
 import { Search } from "lucide-react"
 
 export default function UniversitiesPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [sortBy, setSortBy] = useState<"name" | "ranking" | "students">("ranking")
+  const [universities, setUniversities] = useState<University[]>([])
+  const [loading, setLoading] = useState(true)
+
+  // Load universities on component mount
+  useState(() => {
+    async function loadUniversities() {
+      setLoading(true)
+      try {
+        const data = await getUniversities()
+        setUniversities(data)
+      } catch (error) {
+        console.error('Failed to load universities:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadUniversities()
+  }, [])
 
   const filteredAndSortedUniversities = useMemo(() => {
-    const filtered = searchUniversities(searchQuery)
+    if (!universities.length) return []
+    
+    const filtered = universities.filter(uni => 
+      !searchQuery || 
+      uni.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      uni.location.toLowerCase().includes(searchQuery.toLowerCase())
+    )
 
     return filtered.sort((a, b) => {
       switch (sortBy) {
@@ -28,7 +52,7 @@ export default function UniversitiesPage() {
           return 0
       }
     })
-  }, [searchQuery, sortBy])
+  }, [universities, searchQuery, sortBy])
 
   return (
     <div className="min-h-screen flex flex-col">

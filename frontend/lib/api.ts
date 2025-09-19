@@ -1,7 +1,7 @@
 // API configuration and utilities
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
   ? '/api' 
-  : 'http://localhost:8000/api';
+  : '/api';
 
 // API client with authentication support
 class ApiClient {
