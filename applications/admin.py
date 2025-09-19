@@ -10,7 +10,10 @@ class ApplicationAdmin(admin.ModelAdmin):
         "user",
         "university",
         "prior_highest_education",
-        "cover_letter",
+        "essay",
+        "education_document",
+        "recommendation_letter"
     )
+
     search_fields = ("user__email", "university__name")
     list_filter = ("prior_highest_education",)

@@ -7,3 +7,5 @@ __pycache__/
 media/
 node_modules/
 .local/
+.idea/
+.replit

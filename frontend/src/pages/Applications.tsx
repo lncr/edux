@@ -177,8 +177,23 @@ const Applications: React.FC = () => {
             <div key={app.id} style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '1.5rem', marginBottom: '1rem', backgroundColor: '#fff' }}>
               <h3>{getUniversityName(app.university)}</h3>
               <p><strong>Highest Education:</strong> {app.prior_highest_education}</p>
-              {app.cover_letter && <p><strong>Cover Letter:</strong> {app.cover_letter}</p>}
-              {app.certificate && <p><strong>Certificate:</strong> {app.certificate}</p>}
+              {app.cover_letter && (
+                  <p>
+                    <strong>Cover Letter:</strong>{" "}
+                    {app.cover_letter.split(" ").slice(0, 20).join(" ")}
+                    {app.cover_letter.split(" ").length > 20 && " ..."}
+                  </p>
+                )}
+              {app.certificate && (
+                  <div>
+                    <strong>Certificate:</strong>
+                    <img
+                      src={app.certificate}
+                      alt="Certificate"
+                      style={{ maxWidth: "200px", marginTop: "0.5rem", borderRadius: "8px" }}
+                    />
+                  </div>
+                )}
             </div>
           ))
         )}
