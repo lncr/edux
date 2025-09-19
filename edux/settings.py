@@ -17,13 +17,17 @@ import os
 # Initialise environment variables
 env = environ.Env(
     # set casting, default value
-    DEBUG=(bool, False)
+    DEBUG=(bool, True),
+    SECRET_KEY=(str, 'django-insecure-development-key-only-for-testing-please-change-in-production')
 )
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
+# Try to read .env file if it exists
+env_file = os.path.join(BASE_DIR, ".env")
+if os.path.exists(env_file):
+    environ.Env.read_env(env_file)
 
 DEBUG = env("DEBUG")
 SECRET_KEY = env("SECRET_KEY")
@@ -85,30 +89,13 @@ WSGI_APPLICATION = 'edux.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 # Database configuration with fallback to SQLite
-import os
-database_url = os.environ.get('DATABASE_URL', '')
-
-if database_url.startswith('postgres://') and 'localhost' in database_url:
-    # If PostgreSQL URL points to localhost, use SQLite for development
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
+# For development, we'll use SQLite to avoid PostgreSQL dependency issues
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
-else:
-    try:
-        DATABASES = {
-            "default": env.db(),
-        }
-    except Exception:
-        # Final fallback to SQLite
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.sqlite3',
-                'NAME': BASE_DIR / 'db.sqlite3',
-            }
-        }
+}
 
 AUTH_USER_MODEL = "accounts.CustomUser"
 
