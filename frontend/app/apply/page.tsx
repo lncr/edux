@@ -48,11 +48,22 @@ export default function ApplyPage() {
     e.preventDefault()
     setIsLoading(true)
 
-    console.log("Application data:", formData)
+    const formDataToSend = new FormData()
+      formDataToSend.append("university", formData.university)
+      formDataToSend.append("essay", formData.essay)
+      formDataToSend.append("prior_highest_education", formData.prior_highest_education)
+      formDataToSend.append("target_program", formData.target_program)
 
-    await createApplication(formData);
-    setIsLoading(false)
-    setIsSubmitted(true)
+      if (formData.recommendation_letter) {
+        formDataToSend.append("recommendation_letter", formData.recommendation_letter)
+      }
+      if (formData.education_document) {
+        formDataToSend.append("education_document", formData.education_document)
+      }
+
+      await createApplication(formDataToSend)
+      setIsLoading(false)
+      setIsSubmitted(true)
   }
 
   const handleFileChange =

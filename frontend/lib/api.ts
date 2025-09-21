@@ -59,6 +59,43 @@ class ApiClient {
 
     return response;
   }
+  private async requestFormData(endpoint: string, options: RequestInit = {}) {
+    const url = `${this.baseURL}${endpoint}`;
+    const headers: HeadersInit = {
+      ...options.headers, // don't set Content-Type manually
+    };
+
+    if (this.token) {
+      headers.Authorization = `Bearer ${this.token}`;
+    }
+
+    const response = await fetch(url, {
+      ...options,
+      headers,
+    });
+
+    if (response.status === 401 && this.token) {
+      const refreshed = await this.refreshToken();
+      if (refreshed) {
+        headers.Authorization = `Bearer ${this.token}`;
+        return fetch(url, { ...options, headers });
+      } else {
+        this.clearToken();
+        throw new Error("Authentication failed");
+      }
+    }
+
+    return response;
+  }
+
+  // ✅ Use requestFormData for posting FormData
+  async postFormData(endpoint: string, formData: FormData) {
+    const response = await this.requestFormData(endpoint, {
+      method: "POST",
+      body: formData,
+    });
+    return response.json();
+  }
 
   private async refreshToken(): Promise<boolean> {
     const refreshToken =
@@ -88,10 +125,7 @@ class ApiClient {
   }
   async getUserProfile() {
     const response = await this.get("/v1/user/profile/");
-    if (!response.ok) {
-      throw new Error("Failed to fetch user profile");
-    }
-    return response.json(); // returns { id, email, first_name, last_name, profile: { bio, avatar } }
+    return response; // returns { id, email, first_name, last_name, profile: { bio, avatar } }
   }
 
   async get(endpoint: string) {

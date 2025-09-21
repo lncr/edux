@@ -27,7 +27,7 @@ export async function getApplications(): Promise<Application[]> {
 
 export async function createApplication(applicationData: Omit<Application, 'id'>): Promise<Application | null> {
   try {
-    const application = await apiClient.post('/v1/applications/', applicationData);
+    const application = await apiClient.postFormData('/v1/applications/', applicationData);
     return application;
   } catch (error) {
     console.error('Failed to create application:', error);

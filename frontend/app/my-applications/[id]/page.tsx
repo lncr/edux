@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { notFound } from "next/navigation"
+import { notFound, useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -24,37 +24,52 @@ interface ApplicationDetailPageProps {
 export default function ApplicationDetailPage({ params }: ApplicationDetailPageProps) {
   const [application, setApplication] = useState<Application | null>(null);
   const [university, setUniversity] = useState<UniversityFull | null>(null);
+  const [isLoading, setIsLoading] = useState(true)
+
+  const router = useRouter();
   useEffect(() => {
-      (async () => {
+    ;(async () => {
       try {
-        const data = (await getApplicationById(
-          params.id
-        )) as Application | null;
-      if (!data) {
-          return;
-          }
-      setApplication(data)
-      catch(error){
-          console.error("Failed to load application:", e);
-          }
-      }})}
-  useEffect(() => {
-      (async () => {
-      try {
-        const data = (await getUniversityById(
-          params.id
-        )) as University | null;
-      if (!data) {
-          return;
-          }
-      setUniversity(data)
-      catch(error){
-          console.error("Failed to load university:", e);
-          }
-      }})}
+        // fetch application
+        const appData = await getApplicationById(params.id)
+        setApplication(appData)
+
+        if (appData?.university) {
+          // fetch linked university using appData
+          const uniData = await getUniversityById(appData.university)
+          setUniversity(uniData)
+        }
+      } catch (e) {
+        console.error("Failed to load application detail:", e)
+        router.replace("/404")
+      } finally {
+        setIsLoading(false)
+      }
+    })()
+  }, [params.id, router])
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <p className="text-muted-foreground">Loading application details...</p>
+        </main>
+        <Footer />
+      </div>
+    )
+  }
 
   if (!application || !university) {
-    router.replace("/404");
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <p className="text-red-500">Application or university not found.</p>
+        </main>
+        <Footer />
+      </div>
+    )
   }
 
   const getStatusColor = (status: string) => {

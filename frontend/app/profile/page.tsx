@@ -17,17 +17,30 @@ import { Edit3, Save, X, Calendar, FileText, GraduationCap } from "lucide-react"
 
 export default function ProfilePage() {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setLoading] = useState(false)
+  const [isLoading, setLoading] = useState(true)
+  const [isEditing, setIsEditing] = useState(false)
+  const [applications, setApplications] = useState([])
+  const [formData, setFormData] = useState({
+    first_name: "",
+    last_name: "",
+    email: "",
+    bio: "",
+  })
   useEffect(() => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [currentUser, apps] = await Promise.all([
-        getCurrentUser(),
-        getApplicationsByUser(),
-      ]);
+      const currentUser = await getCurrentUser();
+      const apps = await getApplicationsByUser();
+      console.log(currentUser)
       setUser(currentUser);
       setApplications(apps);
+      setFormData({
+          first_name: currentUser.first_name,
+          last_name: currentUser.last_name,
+          email: currentUser.email,
+          bio: currentUser.bio,
+        })
     } catch (err) {
       console.error("Failed to load profile data:", err);
     } finally {
@@ -36,14 +49,6 @@ export default function ProfilePage() {
   };
       fetchData();
     }, []);
-
-  const [isEditing, setIsEditing] = useState(false)
-  const [formData, setFormData] = useState({
-    first_name: user.first_name,
-    last_name: user.last_name,
-    email: user.email,
-    bio: user.bio,
-  })
 
   const handleSave = async () => {
     setLoading(true)
@@ -81,7 +86,7 @@ export default function ProfilePage() {
       day: "numeric",
     })
   }
-    if (isLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <span className="text-muted-foreground">Loading…</span>
@@ -214,7 +219,6 @@ export default function ProfilePage() {
                       <Calendar className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm">Member since</span>
                     </div>
-                    <span className="text-sm font-medium">{formatDate(user.joinedDate)}</span>
                   </div>
 
                   <div className="flex items-center justify-between">
