@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { GraduationCap, Eye, EyeOff } from "lucide-react"
+import api from "../../lib/api"
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -28,14 +29,21 @@ export default function RegisterPage() {
     e.preventDefault()
     setIsLoading(true)
 
-    // TODO: Implement actual registration logic
-    console.log("Registration data:", formData)
+    try {
+        const { email, password, firstName, lastName } = formData
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false)
-      // Redirect to login or dashboard
-    }, 1000)
+        // Call your real API
+        const result = await api.register(email, password, firstName, lastName)
+
+        console.log("Registration successful:", result)
+
+        navigate("/login")
+      } catch (error) {
+        console.error("Registration failed:", error)
+        // You can also set an error state here for UI feedback
+      } finally {
+        setIsLoading(false)
+      }
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

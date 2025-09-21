@@ -4,10 +4,14 @@ export interface Application {
   id: number
   user: number
   university: number
+  university_name?: name
   prior_highest_education: string
+  created_at: dateString
   essay: string
   education_document?: string | null
   recommendation_letter?: string | null
+  status: string
+  target_program?: string
 }
 
 // API functions for applications

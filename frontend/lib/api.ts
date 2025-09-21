@@ -1,40 +1,36 @@
-// API configuration and utilities
-const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? '/api' 
-  : '/api';
+const API_BASE_URL =
+  process.env.NODE_ENV === "production" ? "/api" : "http://localhost:8000/api";
 
-// API client with authentication support
 class ApiClient {
   private baseURL: string;
   private token: string | null = null;
 
   constructor(baseURL: string) {
     this.baseURL = baseURL;
-    // Try to get token from localStorage (client-side only)
-    if (typeof window !== 'undefined') {
-      this.token = localStorage.getItem('access_token');
+    if (typeof window !== "undefined") {
+      this.token = localStorage.getItem("access_token");
     }
   }
 
   setToken(token: string) {
     this.token = token;
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('access_token', token);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("access_token", token);
     }
   }
 
   clearToken() {
     this.token = null;
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
     }
   }
 
   private async request(endpoint: string, options: RequestInit = {}) {
     const url = `${this.baseURL}${endpoint}`;
     const headers: HeadersInit = {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       ...options.headers,
     };
 
@@ -57,7 +53,7 @@ class ApiClient {
       } else {
         // Refresh failed, clear tokens and redirect to login
         this.clearToken();
-        throw new Error('Authentication failed');
+        throw new Error("Authentication failed");
       }
     }
 
@@ -65,16 +61,17 @@ class ApiClient {
   }
 
   private async refreshToken(): Promise<boolean> {
-    const refreshToken = typeof window !== 'undefined' 
-      ? localStorage.getItem('refresh_token') 
-      : null;
-    
+    const refreshToken =
+      typeof window !== "undefined"
+        ? localStorage.getItem("refresh_token")
+        : null;
+
     if (!refreshToken) return false;
 
     try {
       const response = await fetch(`${this.baseURL}/v1/token/refresh/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ refresh: refreshToken }),
       });
 
@@ -84,10 +81,17 @@ class ApiClient {
         return true;
       }
     } catch (error) {
-      console.error('Token refresh failed:', error);
+      console.error("Token refresh failed:", error);
     }
 
     return false;
+  }
+  async getUserProfile() {
+    const response = await this.get("/v1/user/profile/");
+    if (!response.ok) {
+      throw new Error("Failed to fetch user profile");
+    }
+    return response.json(); // returns { id, email, first_name, last_name, profile: { bio, avatar } }
   }
 
   async get(endpoint: string) {
@@ -97,7 +101,7 @@ class ApiClient {
 
   async post(endpoint: string, data: any) {
     const response = await this.request(endpoint, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify(data),
     });
     return response.json();
@@ -105,7 +109,7 @@ class ApiClient {
 
   async put(endpoint: string, data: any) {
     const response = await this.request(endpoint, {
-      method: 'PUT',
+      method: "PUT",
       body: JSON.stringify(data),
     });
     return response.json();
@@ -113,7 +117,7 @@ class ApiClient {
 
   async delete(endpoint: string) {
     const response = await this.request(endpoint, {
-      method: 'DELETE',
+      method: "DELETE",
     });
     return response.ok;
   }
@@ -121,39 +125,45 @@ class ApiClient {
   // Authentication methods
   async login(email: string, password: string) {
     const response = await fetch(`${this.baseURL}/v1/token/`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     });
 
     if (response.ok) {
       const data = await response.json();
       this.setToken(data.access);
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('refresh_token', data.refresh);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("refresh_token", data.refresh);
       }
       return data;
     } else {
-      throw new Error('Login failed');
+      throw new Error("Login failed");
     }
   }
 
-  async register(email: string, password: string, firstName: string, lastName: string) {
+  async register(
+    email: string,
+    password: string,
+    firstName: string,
+    lastName: string
+  ) {
     const response = await fetch(`${this.baseURL}/v1/register/`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        email, 
-        password, 
-        first_name: firstName, 
-        last_name: lastName 
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email,
+        password,
+        first_name: firstName,
+        last_name: lastName,
+        profile: {},
       }),
     });
 
     if (response.ok) {
       return response.json();
     } else {
-      throw new Error('Registration failed');
+      throw new Error("Registration failed");
     }
   }
 }

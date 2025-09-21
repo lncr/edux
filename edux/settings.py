@@ -151,15 +151,14 @@ SIMPLE_JWT = {
 }
 
 # CORS Configuration for React frontend
-CORS_ALLOW_ALL_ORIGINS = True  # For development only
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5000",  # React frontend on port 5000
-    "http://127.0.0.1:5000",
-    "http://localhost:3000",  # Backup for development
-    "http://127.0.0.1:3000",
-]
-
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:5000",  # React frontend on port 5000
+#     "http://127.0.0.1:5000",
+#     "http://localhost:3000",  # Backup for development
+#     "http://127.0.0.1:3000",
+# ]
+CORS_ALLOW_ALL_ORIGINS = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 

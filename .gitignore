@@ -9,3 +9,5 @@ node_modules/
 .local/
 .idea/
 .replit
+.env.local
+.next/

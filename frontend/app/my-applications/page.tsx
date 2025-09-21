@@ -1,15 +1,26 @@
 "use client"
 import Link from "next/link"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { getApplicationsByUser } from "@/lib/data/applications"
+import { getApplications, Application } from "@/lib/data/applications"
 import { FileText, Calendar, GraduationCap, Plus } from "lucide-react"
 
 export default function MyApplicationsPage() {
-  const applications = getApplicationsByUser()
+  const [applications, setApplications] = useState<Application[] | []>([]);
+  useEffect(() => {
+      (async () => {
+      try {
+        const data = await getApplications();
+        setApplications(data);
+      } catch (e) {
+        console.error("Failed to load applications:", e);
+      }
+    })();
+}, []);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -79,7 +90,7 @@ export default function MyApplicationsPage() {
                       <div className="flex items-center gap-3 mb-2 md:mb-0">
                         <GraduationCap className="h-6 w-6 text-primary" />
                         <div>
-                          <CardTitle className="text-xl">{application.universityName}</CardTitle>
+                          <CardTitle className="text-xl">{application.university_name}</CardTitle>
                           <CardDescription>{application.targetProgram} Program</CardDescription>
                         </div>
                       </div>
@@ -91,15 +102,15 @@ export default function MyApplicationsPage() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">Submitted: {formatDate(application.dateSubmitted)}</span>
+                        <span className="text-sm">Submitted: {formatDate(application.created_at)}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <GraduationCap className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">Target: {application.targetProgram}</span>
+                        <span className="text-sm">Target: Education Program</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <FileText className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">Education: {application.highestEducation}</span>
+                        <span className="text-sm">Education: {application.prior_highest_education}</span>
                       </div>
                     </div>
 
@@ -108,7 +119,7 @@ export default function MyApplicationsPage() {
                         <Link href={`/my-applications/${application.id}`}>View Details</Link>
                       </Button>
                       <Button variant="ghost" size="sm" asChild>
-                        <Link href={`/universities/${application.universityId}`}>View University</Link>
+                        <Link href={`/universities/${application.university}`}>View University</Link>
                       </Button>
                     </div>
                   </CardContent>

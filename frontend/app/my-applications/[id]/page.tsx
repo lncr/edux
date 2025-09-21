@@ -2,6 +2,7 @@
 
 import type React from "react"
 
+import { useState, useEffect } from "react"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -9,9 +10,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { getApplicationById } from "@/lib/data/applications"
+import { getApplicationById, Application } from "@/lib/data/applications"
 import { getUniversityById } from "@/lib/data/universities"
 import { ArrowLeft, FileText, Download } from "lucide-react"
+import { UniversityFull } from "@/universities/[id]/page"
 
 interface ApplicationDetailPageProps {
   params: {
@@ -20,11 +22,39 @@ interface ApplicationDetailPageProps {
 }
 
 export default function ApplicationDetailPage({ params }: ApplicationDetailPageProps) {
-  const application = getApplicationById(params.id)
-  const university = application ? getUniversityById(application.universityId) : null
+  const [application, setApplication] = useState<Application | null>(null);
+  const [university, setUniversity] = useState<UniversityFull | null>(null);
+  useEffect(() => {
+      (async () => {
+      try {
+        const data = (await getApplicationById(
+          params.id
+        )) as Application | null;
+      if (!data) {
+          return;
+          }
+      setApplication(data)
+      catch(error){
+          console.error("Failed to load application:", e);
+          }
+      }})}
+  useEffect(() => {
+      (async () => {
+      try {
+        const data = (await getUniversityById(
+          params.id
+        )) as University | null;
+      if (!data) {
+          return;
+          }
+      setUniversity(data)
+      catch(error){
+          console.error("Failed to load university:", e);
+          }
+      }})}
 
   if (!application || !university) {
-    notFound()
+    router.replace("/404");
   }
 
   const getStatusColor = (status: string) => {
@@ -109,16 +139,12 @@ export default function ApplicationDetailPage({ params }: ApplicationDetailPageP
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label className="text-sm font-medium text-muted-foreground">Target Program</Label>
-                      <p className="font-medium">{application.targetProgram}</p>
-                    </div>
-                    <div>
                       <Label className="text-sm font-medium text-muted-foreground">Highest Education</Label>
-                      <p className="font-medium">{application.highestEducation}</p>
+                      <p className="font-medium">{application.prior_highest_education}</p>
                     </div>
                     <div>
                       <Label className="text-sm font-medium text-muted-foreground">Date Submitted</Label>
-                      <p className="font-medium">{formatDate(application.dateSubmitted)}</p>
+                      <p className="font-medium">{formatDate(application.created_at)}</p>
                     </div>
                     <div>
                       <Label className="text-sm font-medium text-muted-foreground">Application Status</Label>
@@ -178,7 +204,7 @@ export default function ApplicationDetailPage({ params }: ApplicationDetailPageP
                       </Button>
                     </div>
                   )}
-                  {application.educationDocument && (
+                  {application.education_document && (
                     <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                       <div className="flex items-center gap-2">
                         <FileText className="h-4 w-4" />
@@ -203,7 +229,7 @@ export default function ApplicationDetailPage({ params }: ApplicationDetailPageP
                       <div className="w-2 h-2 bg-primary rounded-full" />
                       <div>
                         <p className="text-sm font-medium">Application Submitted</p>
-                        <p className="text-xs text-muted-foreground">{formatDate(application.dateSubmitted)}</p>
+                        <p className="text-xs text-muted-foreground">{formatDate(application.created_at)}</p>
                       </div>
                     </div>
                     {application.status !== "Submitted" && (

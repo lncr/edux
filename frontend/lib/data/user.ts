@@ -1,30 +1,39 @@
+import { apiClient} from "@/lib/api"
 export interface User {
   id: string
-  firstName: string
-  lastName: string
+  first_name: string
+  last_name: string
   email: string
   bio: string
   avatar?: string
-  joinedDate: string
 }
 
-// Mock user data
-export const currentUser: User = {
-  id: "1",
-  firstName: "John",
-  lastName: "Doe",
-  email: "john.doe@example.com",
-  bio: "Passionate student pursuing higher education in computer science. Interested in artificial intelligence and machine learning.",
-  avatar: "/placeholder.svg?height=150&width=150",
-  joinedDate: "2024-01-01",
+
+export async function getCurrentUser(): Promise<User> {
+  try {
+    const user = await apiClient.getUserProfile();
+    return user as User;
+  } catch (error) {
+    console.error("Failed to fetch current user:", error);
+    throw error;
+  }
 }
 
-export function getCurrentUser(): User {
-  return currentUser
-}
+export async function updateUser(updates: Partial<User>): Promise<User> {
+  try {
+    const response = await apiClient.request("/v1/user/profile/", {
+      method: "PATCH",
+      body: JSON.stringify(updates),
+    });
 
-export function updateUser(updates: Partial<User>): User {
-  // In a real app, this would make an API call
-  Object.assign(currentUser, updates)
-  return currentUser
+    if (!response.ok) {
+      throw new Error("Failed to update user profile");
+    }
+
+    const updatedUser = await response.json();
+    return updatedUser as User;
+  } catch (error) {
+    console.error("Error updating user:", error);
+    throw error;
+  }
 }

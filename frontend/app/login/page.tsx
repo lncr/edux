@@ -11,6 +11,8 @@ import { Label } from "@/components/ui/label"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { GraduationCap, Eye, EyeOff } from "lucide-react"
+import { apiClient } from "@/lib/api"
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -23,16 +25,21 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    const router = useRouter();
 
-    // TODO: Implement actual login logic
-    console.log("Login data:", formData)
+    try {
+    // call your login function
+        const data = await apiClient.login(formData.email, formData.password);
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false)
-      // Redirect to dashboard
-    }, 1000)
-  }
+        console.log("Login successful:", data);
+        router.replace("/")
+      } catch (error) {
+            console.error("Login failed:", error);
+            alert("Invalid email or password");
+          } finally {
+            setIsLoading(false);
+          }
+    }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({

@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -16,36 +16,51 @@ import { getApplicationsByUser } from "@/lib/data/applications"
 import { Edit3, Save, X, Calendar, FileText, GraduationCap } from "lucide-react"
 
 export default function ProfilePage() {
-  const user = getCurrentUser()
-  const applications = getApplicationsByUser()
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setLoading] = useState(false)
+  useEffect(() => {
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [currentUser, apps] = await Promise.all([
+        getCurrentUser(),
+        getApplicationsByUser(),
+      ]);
+      setUser(currentUser);
+      setApplications(apps);
+    } catch (err) {
+      console.error("Failed to load profile data:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+      fetchData();
+    }, []);
 
   const [isEditing, setIsEditing] = useState(false)
   const [formData, setFormData] = useState({
-    firstName: user.firstName,
-    lastName: user.lastName,
+    first_name: user.first_name,
+    last_name: user.last_name,
     email: user.email,
     bio: user.bio,
   })
-  const [isLoading, setIsLoading] = useState(false)
 
   const handleSave = async () => {
-    setIsLoading(true)
+    setLoading(true)
 
-    // TODO: Implement actual user update logic
-    console.log("Updating user:", formData)
-
-    // Simulate API call
-    setTimeout(() => {
-      updateUser(formData)
-      setIsLoading(false)
-      setIsEditing(false)
-    }, 1000)
+    try {
+        const updated = await updateUser(formData);
+        console.log("Updated user:", updated);
+        setUser(updated);
+      } catch (e) {
+    alert("Failed to update profile");
+  }
   }
 
   const handleCancel = () => {
     setFormData({
-      firstName: user.firstName,
-      lastName: user.lastName,
+      first_name: user.first_name,
+      last_name: user.last_name,
       email: user.email,
       bio: user.bio,
     })
@@ -65,6 +80,13 @@ export default function ProfilePage() {
       month: "long",
       day: "numeric",
     })
+  }
+    if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <span className="text-muted-foreground">Loading…</span>
+      </div>
+    );
   }
 
   return (
@@ -112,10 +134,10 @@ export default function ProfilePage() {
                   {/* Avatar Section */}
                   <div className="flex items-center gap-6">
                     <Avatar className="h-24 w-24">
-                      <AvatarImage src={user.avatar || "/placeholder.svg"} alt={`${user.firstName} ${user.lastName}`} />
+                      <AvatarImage src={user.avatar || "/placeholder.svg"} alt={`${user.first_name} ${user.last_name}`} />
                       <AvatarFallback className="text-lg">
-                        {user.firstName[0]}
-                        {user.lastName[0]}
+                        {user.first_name[0]}
+                        {user.last_name[0]}
                       </AvatarFallback>
                     </Avatar>
                     {isEditing && (
@@ -131,20 +153,20 @@ export default function ProfilePage() {
                   {/* Form Fields */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="firstName">First Name</Label>
+                      <Label htmlFor="first_name">First Name</Label>
                       {isEditing ? (
-                        <Input id="firstName" name="firstName" value={formData.firstName} onChange={handleChange} />
+                        <Input id="first_name" name="first_name" value={formData.first_name} onChange={handleChange} />
                       ) : (
-                        <p className="py-2 px-3 bg-muted/50 rounded-md">{user.firstName}</p>
+                        <p className="py-2 px-3 bg-muted/50 rounded-md">{user.first_name}</p>
                       )}
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="lastName">Last Name</Label>
+                      <Label htmlFor="last_name">Last Name</Label>
                       {isEditing ? (
-                        <Input id="lastName" name="lastName" value={formData.lastName} onChange={handleChange} />
+                        <Input id="last_name" name="last_name" value={formData.last_name} onChange={handleChange} />
                       ) : (
-                        <p className="py-2 px-3 bg-muted/50 rounded-md">{user.lastName}</p>
+                        <p className="py-2 px-3 bg-muted/50 rounded-md">{user.last_name}</p>
                       )}
                     </div>
                   </div>

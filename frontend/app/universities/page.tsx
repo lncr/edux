@@ -1,58 +1,61 @@
-"use client"
+"use client";
 
-import { useState, useMemo } from "react"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Header } from "@/components/header"
-import { Footer } from "@/components/footer"
-import { UniversityCard } from "@/components/university-card"
-import { getUniversities, searchUniversities, University } from "@/lib/data/universities"
-import { Search } from "lucide-react"
+import { useState, useMemo, useEffect } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Header } from "@/components/header";
+import { Footer } from "@/components/footer";
+import { UniversityCard } from "@/components/university-card";
+import { getUniversities, University } from "@/lib/data/universities";
+import { Search } from "lucide-react";
 
 export default function UniversitiesPage() {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [sortBy, setSortBy] = useState<"name" | "ranking" | "students">("ranking")
-  const [universities, setUniversities] = useState<University[]>([])
-  const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"name" | "ranking" | "students">(
+    "ranking"
+  );
+  const [universities, setUniversities] = useState<University[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Load universities on component mount
-  useState(() => {
-    async function loadUniversities() {
-      setLoading(true)
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
       try {
-        const data = await getUniversities()
-        setUniversities(data)
-      } catch (error) {
-        console.error('Failed to load universities:', error)
+        setLoading(true);
+        const data = await getUniversities();
+        if (!cancelled) setUniversities(data);
+      } catch (e) {
+        console.error("Failed to load universities:", e);
       } finally {
-        setLoading(false)
+        if (!cancelled) setLoading(false);
       }
-    }
-    loadUniversities()
-  }, [])
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const filteredAndSortedUniversities = useMemo(() => {
-    if (!universities.length) return []
-    
-    const filtered = universities.filter(uni => 
-      !searchQuery || 
-      uni.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      uni.location.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-
+    const filtered = universities.filter(
+      (uni) =>
+        !searchQuery ||
+        uni.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        uni.location.toLowerCase().includes(searchQuery.toLowerCase())
+    );
     return filtered.sort((a, b) => {
       switch (sortBy) {
         case "name":
-          return a.name.localeCompare(b.name)
+          return a.name.localeCompare(b.name);
         case "ranking":
-          return (a.ranking || 999) - (b.ranking || 999)
+          return (a.ranking ?? 999) - (b.ranking ?? 999);
         case "students":
-          return b.students - a.students
+          return b.students - a.students;
         default:
-          return 0
+          return 0;
       }
-    })
-  }, [universities, searchQuery, sortBy])
+    });
+  }, [universities, searchQuery, sortBy]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -66,7 +69,8 @@ export default function UniversitiesPage() {
               Explore <span className="text-primary">Universities</span>
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl">
-              Discover world-class universities and find the perfect match for your academic journey.
+              Discover world-class universities and find the perfect match for
+              your academic journey.
             </p>
           </div>
 
@@ -90,7 +94,11 @@ export default function UniversitiesPage() {
               >
                 Ranking
               </Button>
-              <Button variant={sortBy === "name" ? "default" : "outline"} onClick={() => setSortBy("name")} size="sm">
+              <Button
+                variant={sortBy === "name" ? "default" : "outline"}
+                onClick={() => setSortBy("name")}
+                size="sm"
+              >
                 Name
               </Button>
               <Button
@@ -106,7 +114,8 @@ export default function UniversitiesPage() {
           {/* Results Count */}
           <div className="mb-6">
             <p className="text-muted-foreground">
-              Showing {filteredAndSortedUniversities.length} of {universities.length} universities
+              Showing {filteredAndSortedUniversities.length} of{" "}
+              {universities.length} universities
             </p>
           </div>
 
@@ -120,7 +129,9 @@ export default function UniversitiesPage() {
           {/* No Results */}
           {filteredAndSortedUniversities.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-muted-foreground text-lg mb-4">No universities found matching your search.</p>
+              <p className="text-muted-foreground text-lg mb-4">
+                No universities found matching your search.
+              </p>
               <Button onClick={() => setSearchQuery("")} variant="outline">
                 Clear Search
               </Button>
@@ -131,5 +142,5 @@ export default function UniversitiesPage() {
 
       <Footer />
     </div>
-  )
+  );
 }

@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,42 +11,52 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { universities } from "@/lib/data/universities"
+import { getUniversities } from "@/lib/data/universities"
+import { UniversityFull } from "@/universities/[id]/page"
 import { FileText, Upload, CheckCircle } from "lucide-react"
+import { createApplication } from "@/lib/data/applications"
 
 export default function ApplyPage() {
   const searchParams = useSearchParams()
   const preselectedUniversityId = searchParams.get("university")
 
   const [formData, setFormData] = useState({
-    universityId: preselectedUniversityId || "",
+    university_id: preselectedUniversityId || "",
     essay: "",
-    highestEducation: "",
-    targetProgram: "",
-    recommendationLetter: null as File | null,
-    educationDocument: null as File | null,
+    prior_highest_education: "",
+    target_program: "",
+    recommendation_letter: null as File | null,
+    education_document: null as File | null,
   })
   const [isLoading, setIsLoading] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [universities, setUniversities] = useState<UniversityFull[]>([]);
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await getUniversities();
+        setUniversities(data);
+      } catch (e) {
+        console.error("Failed to load universities:", e);
+      }
+    })();
+  }, []);
 
-  const selectedUniversity = universities.find((uni) => uni.id === formData.universityId)
+  const selectedUniversity = universities.find((uni) => uni.id === formData.university_id)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
-    // TODO: Implement actual application submission logic
     console.log("Application data:", formData)
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false)
-      setIsSubmitted(true)
-    }, 2000)
+    await createApplication(formData);
+    setIsLoading(false)
+    setIsSubmitted(true)
   }
 
   const handleFileChange =
-    (field: "recommendationLetter" | "educationDocument") => (e: React.ChangeEvent<HTMLInputElement>) => {
+    (field: "recommendation_letter" | "education_document") => (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0] || null
       setFormData((prev) => ({
         ...prev,
@@ -123,8 +133,8 @@ export default function ApplyPage() {
                 <div className="space-y-2">
                   <Label htmlFor="university">University *</Label>
                   <Select
-                    value={formData.universityId}
-                    onValueChange={(value) => setFormData((prev) => ({ ...prev, universityId: value }))}
+                    value={formData.university}
+                    onValueChange={(value) => setFormData((prev) => ({ ...prev, university: value }))}
                     required
                   >
                     <SelectTrigger>
@@ -144,8 +154,8 @@ export default function ApplyPage() {
                 <div className="space-y-2">
                   <Label htmlFor="targetProgram">Target of Application *</Label>
                   <Select
-                    value={formData.targetProgram}
-                    onValueChange={(value) => setFormData((prev) => ({ ...prev, targetProgram: value }))}
+                    value={formData.target_program}
+                    onValueChange={(value) => setFormData((prev) => ({ ...prev, target_program: value }))}
                     required
                   >
                     <SelectTrigger>
@@ -161,10 +171,10 @@ export default function ApplyPage() {
 
                 {/* Highest Education */}
                 <div className="space-y-2">
-                  <Label htmlFor="highestEducation">Highest Education *</Label>
+                  <Label htmlFor="prior_highest_education">Highest Education *</Label>
                   <Select
-                    value={formData.highestEducation}
-                    onValueChange={(value) => setFormData((prev) => ({ ...prev, highestEducation: value }))}
+                    value={formData.prior_highest_education}
+                    onValueChange={(value) => setFormData((prev) => ({ ...prev, prior_highest_education: value }))}
                     required
                   >
                     <SelectTrigger>
@@ -198,21 +208,21 @@ export default function ApplyPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Recommendation Letter */}
                   <div className="space-y-2">
-                    <Label htmlFor="recommendationLetter">Recommendation Letter *</Label>
+                    <Label htmlFor="recommendation_letter">Recommendation Letter *</Label>
                     <div className="border-2 border-dashed border-border rounded-lg p-4 text-center">
                       <input
-                        id="recommendationLetter"
+                        id="recommendation_letter"
                         type="file"
                         accept=".pdf,.doc,.docx"
-                        onChange={handleFileChange("recommendationLetter")}
+                        onChange={handleFileChange("recommendation_letter")}
                         className="hidden"
                         required
                       />
-                      <label htmlFor="recommendationLetter" className="cursor-pointer">
+                      <label htmlFor="recommendation_letter" className="cursor-pointer">
                         <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
                         <p className="text-sm text-muted-foreground">
-                          {formData.recommendationLetter
-                            ? formData.recommendationLetter.name
+                          {formData.recommendation_letter
+                            ? formData.recommendation_letter.name
                             : "Click to upload PDF or DOC"}
                         </p>
                       </label>
@@ -221,20 +231,20 @@ export default function ApplyPage() {
 
                   {/* Education Document */}
                   <div className="space-y-2">
-                    <Label htmlFor="educationDocument">Document of Highest Education *</Label>
+                    <Label htmlFor="education_document">Document of Highest Education *</Label>
                     <div className="border-2 border-dashed border-border rounded-lg p-4 text-center">
                       <input
-                        id="educationDocument"
+                        id="education_document"
                         type="file"
                         accept=".pdf,.doc,.docx"
-                        onChange={handleFileChange("educationDocument")}
+                        onChange={handleFileChange("education_document")}
                         className="hidden"
                         required
                       />
-                      <label htmlFor="educationDocument" className="cursor-pointer">
+                      <label htmlFor="education_document" className="cursor-pointer">
                         <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
                         <p className="text-sm text-muted-foreground">
-                          {formData.educationDocument ? formData.educationDocument.name : "Click to upload PDF or DOC"}
+                          {formData.education_document ? formData.education_document.name : "Click to upload PDF or DOC"}
                         </p>
                       </label>
                     </div>

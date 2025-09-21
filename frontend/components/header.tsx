@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { GraduationCap } from "lucide-react"
 
 export function Header() {
+  const hasToken = typeof window !== "undefined" && localStorage.getItem("access_token");
   return (
     <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
@@ -26,13 +27,25 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <Button variant="ghost" asChild>
-            <Link href="/login">Login</Link>
-          </Button>
-          <Button asChild>
-            <Link href="/register">Register</Link>
-          </Button>
-        </div>
+  {!hasToken ? (
+    <>
+      <Button variant="ghost" asChild>
+        <Link href="/login">Login</Link>
+      </Button>
+      <Button asChild>
+        <Link href="/register">Register</Link>
+      </Button>
+    </>
+  ) : (
+    <Button variant="ghost" onClick={() => {
+      localStorage.removeItem("access_token");
+      window.location.reload();
+    }}>
+      Logout
+    </Button>
+  )}
+</div>
+
       </div>
     </header>
   )
