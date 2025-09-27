@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { getCurrentUser, updateUser } from "@/lib/data/user"
+import { getCurrentUser, updateUser, User } from "@/lib/data/user"
 import { getApplicationsByUser } from "@/lib/data/applications"
 import { Edit3, Save, X, Calendar, FileText, GraduationCap } from "lucide-react"
 
@@ -24,7 +24,10 @@ export default function ProfilePage() {
     first_name: "",
     last_name: "",
     email: "",
-    bio: "",
+    profile: {
+      bio: "",
+      avatar: ""
+    }
   })
   useEffect(() => {
   const fetchData = async () => {
@@ -39,7 +42,10 @@ export default function ProfilePage() {
           first_name: currentUser.first_name,
           last_name: currentUser.last_name,
           email: currentUser.email,
-          bio: currentUser.bio,
+          profile: {
+            bio: currentUser.profile.bio,
+            avatar: currentUser.profile.avatar
+          }
         })
     } catch (err) {
       console.error("Failed to load profile data:", err);
@@ -53,13 +59,30 @@ export default function ProfilePage() {
   const handleSave = async () => {
     setLoading(true)
 
+    const formDataToSend = new FormData()
+    if (formData.first_name){
+      formDataToSend.append("first_name", formData.first_name)
+    }
+    if (formData.last_name){
+      formDataToSend.append("last_name", formData.last_name)
+  }
+    if (formData.email){
+      formDataToSend.append("email", formData.email)
+    }
+    if (formData.profile?.bio) {
+      formDataToSend.append("profile.bio", formData.profile.bio)
+    }
+    if (formData.profile?.avatar) {
+      formDataToSend.append("profile.avatar", formData.profile.avatar) // must be a File
+    }
     try {
-        const updated = await updateUser(formData);
+        const updated = await updateUser(formDataToSend);
         console.log("Updated user:", updated);
         setUser(updated);
       } catch (e) {
     alert("Failed to update profile");
   }
+    setLoading(false)
   }
 
   const handleCancel = () => {
@@ -67,17 +90,52 @@ export default function ProfilePage() {
       first_name: user.first_name,
       last_name: user.last_name,
       email: user.email,
-      bio: user.bio,
+      profile: {
+        bio: user.profile.bio,
+        avatar: user?.profile.avatar
+      }
     })
     setIsEditing(false)
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }))
+  const { name, type } = e.target
+
+    // Special case for file inputs
+    if (type === "file" && e.target instanceof HTMLInputElement) {
+      const file = e.target.files?.[0]
+      if (!file) return
+
+      setFormData((prev) => ({
+        ...prev,
+        profile: {
+          ...prev.profile,
+          [name]: file, // store the File object
+        },
+      }))
+      return
+    }
+
+    const value = e.target.value
+
+    setFormData((prev) => {
+      if (name === "bio" || name === "avatar") {
+        return {
+          ...prev,
+          profile: {
+            ...prev.profile,
+            [name]: value,
+          },
+        }
+      }
+
+      return {
+        ...prev,
+        [name]: value,
+      }
+    })
   }
+
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -137,23 +195,43 @@ export default function ProfilePage() {
 
                 <CardContent className="space-y-6">
                   {/* Avatar Section */}
-                  <div className="flex items-center gap-6">
-                    <Avatar className="h-24 w-24">
-                      <AvatarImage src={user.avatar || "/placeholder.svg"} alt={`${user.first_name} ${user.last_name}`} />
-                      <AvatarFallback className="text-lg">
-                        {user.first_name[0]}
-                        {user.last_name[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    {isEditing && (
-                      <div>
-                        <Button variant="outline" size="sm">
-                          Change Avatar
-                        </Button>
-                        <p className="text-xs text-muted-foreground mt-1">JPG, PNG or GIF. Max size 2MB.</p>
-                      </div>
-                    )}
-                  </div>
+                <div className="flex items-center gap-6">
+                  <Avatar className="h-24 w-24">
+                    <AvatarImage
+                      src={
+                        formData.profile.avatar || "/placeholder.svg"
+                      }
+                      alt={`${user?.first_name} ${user?.last_name}`}
+                    />
+                    <AvatarFallback className="text-lg">
+                      {user?.first_name[0]}
+                      {user?.last_name[0]}
+                    </AvatarFallback>
+                  </Avatar>
+
+                  {isEditing && (
+                    <div>
+                      <input
+                        type="file"
+                        id="avatar"
+                        name="avatar"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleChange}
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => document.getElementById("avatar")?.click()}
+                      >
+                        Change Avatar
+                      </Button>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        JPG, PNG or GIF. Max size 2MB.
+                      </p>
+                    </div>
+                  )}
+                </div>
 
                   {/* Form Fields */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -191,14 +269,14 @@ export default function ProfilePage() {
                       <Textarea
                         id="bio"
                         name="bio"
-                        value={formData.bio}
+                        value={formData.profile.bio}
                         onChange={handleChange}
                         className="min-h-24"
                         placeholder="Tell us about yourself..."
                       />
                     ) : (
                       <p className="py-2 px-3 bg-muted/50 rounded-md min-h-24 whitespace-pre-wrap">
-                        {user.bio || "No bio provided."}
+                        {user.profile.bio || "No bio provided."}
                       </p>
                     )}
                   </div>

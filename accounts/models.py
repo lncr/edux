@@ -37,7 +37,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 class Profile(models.Model):
     user = models.OneToOneField("accounts.CustomUser", on_delete=models.CASCADE, related_name="profile")
     bio = models.TextField(blank=True)
-    avatar = models.URLField(blank=True, null=True)  # Temporarily using URLField instead of ImageField
+    avatar = models.ImageField(upload_to='avatar/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

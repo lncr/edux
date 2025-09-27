@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { GraduationCap, Eye, EyeOff } from "lucide-react"
+import { useRouter } from "next/navigation";
 import api from "../../lib/api"
 
 export default function RegisterPage() {
@@ -24,6 +25,7 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,7 +39,7 @@ export default function RegisterPage() {
 
         console.log("Registration successful:", result)
 
-        navigate("/login")
+        router.replace("/login")
       } catch (error) {
         console.error("Registration failed:", error)
         // You can also set an error state here for UI feedback

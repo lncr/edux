@@ -1,6 +1,6 @@
 from rest_framework import generics, permissions, parsers
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from rest_framework.response import Response
 from openai import OpenAI
@@ -32,6 +32,10 @@ class ApplicationListCreateView(generics.ListCreateAPIView):
         print(serializer.data)
         return Response(serializer.data)
 
+    def filter_queryset(self, queryset):
+        user = self.request.user
+        return queryset.filter(user=user)
+
 class ApplicationDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Application.objects.all()
     serializer_class = ApplicationSerializer
@@ -44,8 +48,8 @@ class ApplicationDetailView(generics.RetrieveUpdateDestroyAPIView):
         print(serializer.data)
         return Response(serializer.data)
 
+
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
 def recommend_view(request, *args, **kwargs):
     client = OpenAI()
     serializer = RecommendSerializer(data=request.data)
